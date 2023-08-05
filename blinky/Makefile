@@ -1,10 +1,11 @@
-PROJ:=blink_led
-CC:=avr-gcc
-COPTS:=-Os
-MCU:=atmega328p
-CSRC=$(wildcard *.c)
-OBJS=$(CSRC:.c=.o)
+PROJ=blink_led
+CC=avr-gcc
+COPTS=-Os
+MCU=atmega328p
 CLK=16000000UL
+
+CSRC:=$(wildcard *.c)
+OBJS:=$(CSRC:.c=.o)
 
 .PHONY: all clean download dis
 

@@ -38,7 +38,7 @@ void initUART(void)
     stdout = stderr = &mystdout;
     stdin = &mystdin;
 #undef BAUD // avoid compiler warning
-#define BAUD 1000000
+#define BAUD 2000000
 #include <util/setbaud.h>
     UBRR0H = UBRRH_VALUE;
     UBRR0L = UBRRL_VALUE;

@@ -18,7 +18,7 @@ set(BAUD 2000000)
 # The programmer to use, read avrdude manual for list
 set(PROG_TYPE Arduino)
 # FreeRTOS base directory
-set(FREE_RTOS FreeRTOS/FreeRTOS)
+set(FREE_RTOS FreeRTOS-Kernel)
 # Serial port used for programming
 set(SERIAL /dev/ttyUSB0)
 
@@ -43,29 +43,29 @@ add_definitions(
     -DBAUD=${BAUD}
 )
 # mmcu MUST be passed to both the compiler and linker, this handle the linker
-set(CMAKE_EXE_LINKER_FLAGS -mmcu=${MCU})
+set(CMAKE_EXE_LINKER_FLAGS "-Wl,-Map,${PRODUCT_NAME}.map -mmcu=${MCU}")
 
 add_compile_options(
     -mmcu=${MCU} # MCU
-    -Og # optimize
+    -Os # optimize
     -Wall # enable warnings
-    -I${PROJECT_SOURCE_DIR}/${FREE_RTOS}/Source/include
+    -I${PROJECT_SOURCE_DIR}/${FREE_RTOS}/include
     -I${PROJECT_SOURCE_DIR}
-    -I${PROJECT_SOURCE_DIR}/${FREE_RTOS}/Source/portable/ThirdParty/GCC/ATmega
+    -I${PROJECT_SOURCE_DIR}/${FREE_RTOS}/portable/ThirdParty/GCC/ATmega
 )
 
 set(SRC_FILES
-    ${PROJECT_SOURCE_DIR}/${FREE_RTOS}/Source/croutine.c
-    ${PROJECT_SOURCE_DIR}/${FREE_RTOS}/Source/event_groups.c
-    ${PROJECT_SOURCE_DIR}/${FREE_RTOS}/Source/list.c
-    ${PROJECT_SOURCE_DIR}/${FREE_RTOS}/Source/queue.c
-    ${PROJECT_SOURCE_DIR}/${FREE_RTOS}/Source/stream_buffer.c
-    ${PROJECT_SOURCE_DIR}/${FREE_RTOS}/Source/tasks.c
-    ${PROJECT_SOURCE_DIR}/${FREE_RTOS}/Source/timers.c
-    ${PROJECT_SOURCE_DIR}/${FREE_RTOS}/Source/portable/ThirdParty/GCC/ATmega/port.c
-    ${PROJECT_SOURCE_DIR}/${FREE_RTOS}/Source/portable/MemMang/heap_4.c
-    ${PROJECT_SOURCE_DIR}/main.c
-    ${PROJECT_SOURCE_DIR}/uart.c
+    ${FREE_RTOS}/croutine.c
+    ${FREE_RTOS}/event_groups.c
+    ${FREE_RTOS}/list.c
+    ${FREE_RTOS}/queue.c
+    ${FREE_RTOS}/stream_buffer.c
+    ${FREE_RTOS}/tasks.c
+    ${FREE_RTOS}/timers.c
+    ${FREE_RTOS}/portable/ThirdParty/GCC/ATmega/port.c
+    ${FREE_RTOS}/portable/MemMang/heap_4.c
+    main.c
+    uart.c
 )
 
 # Create one target
@@ -93,5 +93,5 @@ add_custom_target(upload_eeprom avrdude -c ${PROG_TYPE} -p ${MCU}  -U eeprom:w:$
 add_custom_target(fuses avrdude -c ${PROG_TYPE} -p ${MCU}  -U lfuse:w:${L_FUSE}:m -U hfuse:w:${H_FUSE}:m -U efuse:w:${E_FUSE}:m -U lock:w:${LOCK_BIT}:m )
 
 # Clean extra files
-set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${PRODUCT_NAME}.hex;${PRODUCT_NAME}.eeprom;${PRODUCT_NAME}.lst")
+set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${PRODUCT_NAME}.map;${PRODUCT_NAME}.hex;${PRODUCT_NAME}.eeprom;${PRODUCT_NAME}.lst")
 

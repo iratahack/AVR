@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <time.h>
 #include <avr/interrupt.h>
 
@@ -20,8 +19,6 @@ ISR(TIMER2_COMPA_vect)
         // Toggle LED
         PORTB ^= _BV(PORTB5);
         system_tick();
-        time(&timer);
-        printf("%s\n", ctime(&timer));
     }
     ticks++;
 }
@@ -39,7 +36,5 @@ void initTimer(void)
     TCCR2A = _BV(WGM21);
     // Select timer clock
     TCCR2B = _BV(CS22) | _BV(CS21) | _BV(CS20);
-    // Set bit 5 of DDRB to one - Set digital pin 13 to output mode
-//    DDRB |= _BV(DDB5);
     sei();
 }

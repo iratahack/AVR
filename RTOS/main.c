@@ -28,25 +28,38 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
 
 void vLEDFlashTask(void *pvParms)
 {
+  TickType_t xLastWakeTime;
   printf("Hello from %s\n", __func__);
 
+  // Enable LED port direction to output
   DDRB |= _BV(PB5);
+
+  // Initialise the xLastWakeTime variable with the current time.
+  xLastWakeTime = xTaskGetTickCount();
 
   for (;;)
   {
+    // Wait for the next cycle.
+    xTaskDelayUntil(&xLastWakeTime, configTICK_RATE_HZ);
+
+    // Perform action here.
     PORTB ^= _BV(PB5);
     printf("%02x\n", PORTB);
-    vTaskDelay(66);
   }
 }
 
 int main(void)
 {
+  /* On AVR devices all peripherals are enabled from power on reset, this
+   * disables all peripherals to save power. Driver shall enable
+   * peripheral if used */
+  PRR = 0xff;
+
   initUART();
 
   printf("Hello from %s\n", __func__);
 
-  set_sleep_mode(SLEEP_MODE_IDLE);
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   sleep_enable();
 
   xTaskCreate(vLEDFlashTask, "LED", configMINIMAL_STACK_SIZE, NULL, mainLED_TASK_PRIORITY, NULL);

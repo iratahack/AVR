@@ -35,6 +35,9 @@ static FILE mystdin = FDEV_SETUP_STREAM(NULL, uart_getchar, _FDEV_SETUP_READ);
 
 void initUART(void)
 {
+    // Power on the UART
+    PRR &= ~_BV(PRUSART0);
+    // Setup stdio
     stdout = stderr = &mystdout;
     stdin = &mystdin;
 #include <util/setbaud.h>

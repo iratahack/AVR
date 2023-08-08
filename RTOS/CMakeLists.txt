@@ -5,7 +5,7 @@ project("FreeRTOS")
 
 # Product filename
 set(PRODUCT_NAME FreeRTOS)
-
+set(CMAKE_SKIP_INSTALL_RULES ON)
 ## AVR Chip Configuration
 # 8Mhz, this should match the crystal on your board,
 # I use 8Mhz and 3.3V for the lowest power consumption
@@ -43,7 +43,7 @@ add_definitions(
     -DBAUD=${BAUD}
 )
 # mmcu MUST be passed to both the compiler and linker, this handle the linker
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,-Map,${PRODUCT_NAME}.map -mmcu=${MCU}")
+set(CMAKE_EXE_LINKER_FLAGS "-Wl,-Map,${PRODUCT_NAME}.map -mmcu=${MCU} -Wl,-gc-sections")
 
 add_compile_options(
     -mmcu=${MCU} # MCU
@@ -52,6 +52,7 @@ add_compile_options(
     -I${PROJECT_SOURCE_DIR}/${FREE_RTOS}/include
     -I${PROJECT_SOURCE_DIR}
     -I${PROJECT_SOURCE_DIR}/${FREE_RTOS}/portable/ThirdParty/GCC/ATmega
+    -ffunction-sections # functions in spearate sections
 )
 
 set(SRC_FILES

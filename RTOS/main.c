@@ -4,10 +4,15 @@
 #include <avr/sleep.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/power.h>
+#include <avr/eeprom.h>
 
 void initUART(void);
 
+EEMEM char test[] = "Hello";
+
 #define mainLED_TASK_PRIORITY (tskIDLE_PRIORITY + 1)
+#define input_TASK_PRIORITY (mainLED_TASK_PRIORITY)
 
 /*-----------------------------------------------------------*/
 
@@ -26,10 +31,21 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
     ;
 }
 
+void inputTask(void *pvParms)
+{
+  char s;
+  printf("%s running.\n", __func__);
+  for (;;)
+  {
+    fread(&s, 1, 1, stdin);
+    fwrite(&s, 1, 1, stdout);
+  }
+}
+
 void vLEDFlashTask(void *pvParms)
 {
   TickType_t xLastWakeTime;
-  printf("Hello from %s\n", __func__);
+  printf("%s running.\n", __func__);
 
   // Enable LED port direction to output
   DDRB |= _BV(PB5);
@@ -44,25 +60,31 @@ void vLEDFlashTask(void *pvParms)
 
     // Perform action here.
     PORTB ^= _BV(PB5);
-    printf("%02x\n", PORTB);
   }
 }
 
 int main(void)
 {
-  /* On AVR devices all peripherals are enabled from power on reset, this
-   * disables all peripherals to save power. Driver shall enable
-   * peripheral if used */
-  PRR = 0xff;
+  power_all_disable();
 
   initUART();
 
-  printf("Hello from %s\n", __func__);
+  printf("%s running.\n", __func__);
 
-  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  set_sleep_mode(SLEEP_MODE_IDLE);
   sleep_enable();
 
+#if 0
+  for (int n = 0; n < 1024; n++)
+  {
+    printf("0x%02x ", eeprom_read_byte((void *)n));
+    if ((n & 0x0f) == 0xf)
+      printf("\n");
+  }
+#endif
+
   xTaskCreate(vLEDFlashTask, "LED", configMINIMAL_STACK_SIZE, NULL, mainLED_TASK_PRIORITY, NULL);
+  xTaskCreate(inputTask, "Input", 128, NULL, input_TASK_PRIORITY, NULL);
   vTaskStartScheduler();
 
   return 0;

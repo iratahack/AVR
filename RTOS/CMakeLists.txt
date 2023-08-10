@@ -6,15 +6,13 @@ project("FreeRTOS")
 # Product filename
 set(PRODUCT_NAME FreeRTOS)
 set(CMAKE_SKIP_INSTALL_RULES ON)
-## AVR Chip Configuration
-# 8Mhz, this should match the crystal on your board,
-# I use 8Mhz and 3.3V for the lowest power consumption
+
 set(F_CPU 16000000UL)
 # CPU, you can find the list here:
 # https://gcc.gnu.org/onlinedocs/gcc/AVR-Options.html
 set(MCU atmega328p)
 # Default Baudrate for UART, read avr include/util/setbaud.h for usage
-set(BAUD 2000000)
+set(BAUD 1000000)
 # The programmer to use, read avrdude manual for list
 set(PROG_TYPE Arduino)
 # FreeRTOS base directory
@@ -75,6 +73,10 @@ add_executable(${PRODUCT_NAME} ${SRC_FILES})
 # Rename the output to .elf as we will create multiple files
 set_target_properties(${PRODUCT_NAME} PROPERTIES OUTPUT_NAME ${PRODUCT_NAME}.elf)
 
+add_custom_command(TARGET ${PRODUCT_NAME} POST_BUILD
+    COMMAND avr-size --format=avr --mcu ${MCU} ${PRODUCT_NAME}.elf
+)
+
 # Strip binary for upload
 add_custom_target(strip avr-strip ${PRODUCT_NAME}.elf DEPENDS ${PRODUCT_NAME})
 
@@ -85,13 +87,13 @@ add_custom_target(hex avr-objcopy -R .eeprom -O ihex ${PRODUCT_NAME}.elf ${PRODU
 add_custom_target(eeprom avr-objcopy -j .eeprom  --set-section-flags=.eeprom="alloc,load"  --change-section-lma .eeprom=0 -O ihex ${PRODUCT_NAME}.elf ${PRODUCT_NAME}.eep DEPENDS strip)
 
 # Upload the firmware with avrdude
-add_custom_target(upload sudo avrdude  -c ${PROG_TYPE} -p ${MCU} -P ${SERIAL} -B 115200 -U flash:w:${PRODUCT_NAME}.hex DEPENDS hex)
+add_custom_target(upload sudo avrdude  -u -c ${PROG_TYPE} -p ${MCU} -P ${SERIAL} -B 115200 -U flash:w:${PRODUCT_NAME}.hex DEPENDS hex)
 
 # Upload the eeprom with avrdude
-add_custom_target(upload_eeprom avrdude -c ${PROG_TYPE} -p ${MCU}  -U eeprom:w:${PRODUCT_NAME}.eep DEPENDS eeprom)
+add_custom_target(upload_eeprom sudo avrdude -D -v -V -c ${PROG_TYPE} -p ${MCU} -P ${SERIAL} -B 115200 -U eeprom:w:${PRODUCT_NAME}.eep DEPENDS eeprom)
 
 # Burn fuses
-add_custom_target(fuses avrdude -c ${PROG_TYPE} -p ${MCU}  -U lfuse:w:${L_FUSE}:m -U hfuse:w:${H_FUSE}:m -U efuse:w:${E_FUSE}:m -U lock:w:${LOCK_BIT}:m )
+add_custom_target(fuses sudo avrdude -c ${PROG_TYPE} -p ${MCU} -P ${SERIAL} -B 115200 -U lfuse:w:${L_FUSE}:m -U hfuse:w:${H_FUSE}:m -U efuse:w:${E_FUSE}:m -U lock:w:${LOCK_BIT}:m )
 
 # Clean extra files
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${PRODUCT_NAME}.map;${PRODUCT_NAME}.hex;${PRODUCT_NAME}.eeprom;${PRODUCT_NAME}.lst")
